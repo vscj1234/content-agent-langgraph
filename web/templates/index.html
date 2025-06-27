@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content Generator AI</title>
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header Section -->
+    <div class="header">
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="logo" />
+        <h1>Content Generator AI</h1>
+      </div>
+      <p class="subtitle">Create engaging social media content with AI-powered automation</p>
+    </div>
+
+    <!-- Main Form -->
+    <div class="form-container">
+      <form id="contentForm" method="POST" enctype="multipart/form-data">
+        <!-- Topic Input -->
+        <div class="input-group">
+          <label for="topic">
+            <i data-feather="edit-3"></i>
+            Content Topic
+          </label>
+          <input 
+            type="text" 
+            id="topic" 
+            name="topic" 
+            placeholder="Enter your content topic (e.g., 'Latest AI trends in marketing')" 
+            required 
+          />
+        </div>
+
+        <!-- Platform Selection -->
+        <div class="input-group">
+          <label>
+            <i data-feather="share-2"></i>
+            Select Platforms
+          </label>
+          <div class="platform-grid">
+            <div class="platform-card" data-platform="facebook">
+              <input type="checkbox" id="facebook" name="platforms" value="facebook" />
+              <label for="facebook">
+                <div class="platform-icon facebook">
+                  <i data-feather="facebook"></i>
+                </div>
+                <span>Facebook</span>
+              </label>
+            </div>
+            <div class="platform-card" data-platform="instagram">
+              <input type="checkbox" id="instagram" name="platforms" value="instagram" />
+              <label for="instagram">
+                <div class="platform-icon instagram">
+                  <i data-feather="instagram"></i>
+                </div>
+                <span>Instagram</span>
+              </label>
+            </div>
+            <div class="platform-card" data-platform="linkedin">
+              <input type="checkbox" id="linkedin" name="platforms" value="linkedin" />
+              <label for="linkedin">
+                <div class="platform-icon linkedin">
+                  <i data-feather="linkedin"></i>
+                </div>
+                <span>LinkedIn</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Image Upload -->
+        <div class="input-group">
+          <label for="image">
+            <i data-feather="image"></i>
+            Upload Image (Optional)
+          </label>
+          <div class="file-upload-container">
+            <input type="file" id="image" name="image" accept="image/*" />
+            <div class="file-upload-display">
+              <i data-feather="upload-cloud"></i>
+              <span class="file-text">Drag & drop an image or click to browse</span>
+              <span class="file-subtext">Supports JPG, PNG, GIF up to 10MB</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Schedule Option -->
+        <div class="input-group">
+          <label>
+            <i data-feather="clock"></i>
+            Posting Options
+          </label>
+          <div class="schedule-options">
+            <div class="radio-group">
+              <input type="radio" id="post-now" name="schedule_option" value="now" checked />
+              <label for="post-now">
+                <span class="radio-dot"></span>
+                Post Now
+              </label>
+            </div>
+            <div class="radio-group">
+              <input type="radio" id="post-later" name="schedule_option" value="later" />
+              <label for="post-later">
+                <span class="radio-dot"></span>
+                Schedule for Later
+              </label>
+            </div>
+          </div>
+          <div class="schedule-input" id="scheduleInput" style="display: none;">
+            <input type="datetime-local" id="schedule_time" name="schedule_time" />
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <span class="btn-text">Generate Content</span>
+          <i data-feather="zap"></i>
+        </button>
+      </form>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-container" id="loadingContainer" style="display: none;">
+      <div class="spinner"></div>
+      <p>Generating your content...</p>
+      <div class="progress-steps">
+        <div class="step active" data-step="1">Analyzing Topic</div>
+        <div class="step" data-step="2">Generating Text</div>
+        <div class="step" data-step="3">Creating Image</div>
+        <div class="step" data-step="4">Publishing</div>
+      </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-container" id="resultsContainer" style="display: none;">
+      <h2>Generated Content</h2>
+      <div class="result-card">
+        <div class="result-header">
+          <h3>Caption</h3>
+          <button class="copy-btn" data-copy="caption">
+            <i data-feather="copy"></i>
+          </button>
+        </div>
+        <p id="generatedCaption"></p>
+      </div>
+      <div class="result-card">
+        <div class="result-header">
+          <h3>Content</h3>
+          <button class="copy-btn" data-copy="content">
+            <i data-feather="copy"></i>
+          </button>
+        </div>
+        <p id="generatedContent"></p>
+      </div>
+      <div class="result-card" id="imageResult" style="display: none;">
+        <div class="result-header">
+          <h3>Generated Image</h3>
+        </div>
+        <img id="generatedImage" alt="Generated content image" />
+      </div>
+      <div class="action-buttons">
+        <button class="reset-btn" onclick="resetForm()">
+          <i data-feather="plus"></i>
+          Create New Post
+        </button>
+      </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for message in messages %}
+            <div class="flash-message">
+              <i data-feather="info"></i>
+              <span>{{ message }}</span>
+              <button class="close-flash">
+                <i data-feather="x"></i>
+              </button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script>
+    feather.replace();
+  </script>
+</body>
+</html>
